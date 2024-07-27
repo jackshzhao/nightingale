@@ -69,6 +69,13 @@ func MergeOperationConf() error {
 const (
 	builtInOps = `
 ops:
+- name: applications
+  cname: 应用视图
+  ops:
+    - "/applications"
+    - "/application-details"
+
+
 - name: dashboards
   cname: 仪表盘
   ops:

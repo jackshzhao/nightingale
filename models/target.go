@@ -26,6 +26,7 @@ type Target struct {
 	HostIp       string            `json:"host_ip"` //ipv4，do not needs range select
 	AgentVersion string            `json:"agent_version"`
 	EngineName   string            `json:"engine_name"`
+	HealthLevel  int               `json:"health_level"`
 
 	UnixTime   int64   `json:"unixtime" gorm:"-"`
 	Offset     int64   `json:"offset" gorm:"-"`

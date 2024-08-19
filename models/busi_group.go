@@ -12,16 +12,21 @@ import (
 )
 
 type BusiGroup struct {
-	Id          int64                   `json:"id" gorm:"primaryKey"`
-	Name        string                  `json:"name"`
-	LabelEnable int                     `json:"label_enable"`
-	LabelValue  string                  `json:"label_value"`
-	CreateAt    int64                   `json:"create_at"`
-	CreateBy    string                  `json:"create_by"`
-	UpdateAt    int64                   `json:"update_at"`
-	UpdateBy    string                  `json:"update_by"`
-	UserGroups  []UserGroupWithPermFlag `json:"user_groups" gorm:"-"`
-	DB          *gorm.DB                `json:"-" gorm:"-"`
+	Id          int64   `json:"id" gorm:"primaryKey"`
+	Name        string  `json:"name"`
+	LabelEnable int     `json:"label_enable"`
+	LabelValue  string  `json:"label_value"`
+	CreateAt    int64   `json:"create_at"`
+	CreateBy    string  `json:"create_by"`
+	UpdateAt    int64   `json:"update_at"`
+	UpdateBy    string  `json:"update_by"`
+	HealthLevel float32 `json:"health_level"`
+	AlertNum    int     `json:"alert_num"`
+	Usability   float32 `json:"usability"`
+	Grade       int     `json:"grade"`
+
+	UserGroups []UserGroupWithPermFlag `json:"user_groups" gorm:"-"`
+	DB         *gorm.DB                `json:"-" gorm:"-"`
 }
 
 func New(db *gorm.DB) *BusiGroup {
@@ -353,4 +358,11 @@ func BusiGroupStatistics(ctx *ctx.Context) (*Statistics, error) {
 	}
 
 	return stats[0], nil
+}
+
+func BusiGroupUpdateHealth(ctx *ctx.Context, id int64, health float32, alertNum int) error {
+	return DB(ctx).Model(&BusiGroup{}).Where("id = ?", id).Updates(map[string]interface{}{
+		"health_level": health,
+		"alert_num":    alertNum,
+	}).Error
 }

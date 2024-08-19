@@ -693,7 +693,7 @@ func (u *User) NopriIdents(ctx *ctx.Context, idents []string) ([]string, error) 
 // 我是管理员，返回所有
 // 或者我是成员
 func (u *User) BusiGroups(ctx *ctx.Context, limit int, query string, all ...bool) ([]BusiGroup, error) {
-	session := DB(ctx).Order("name").Limit(limit)
+	session := DB(ctx).Order("health_level").Limit(limit)
 
 	var lst []BusiGroup
 	if u.IsAdmin() || (len(all) > 0 && all[0]) {

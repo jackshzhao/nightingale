@@ -7,11 +7,11 @@ Dir = "logs"
 # log level: DEBUG INFO WARNING ERROR
 Level = "DEBUG"
 # stdout, stderr, file
-Output = "stdout"
+Output = "file"
 # # rotate by time
 # KeepHours = 4
 # # rotate by size
-# RotateNum = 3
+RotateNum = 3
 # # unit: MB
 # RotateSize = 256
 
@@ -19,7 +19,7 @@ Output = "stdout"
 # http listening address
 Host = "0.0.0.0"
 # http listening port
-Port = 17000
+Port = 19000
 # https cert file path
 CertFile = ""
 # https key file path
@@ -76,9 +76,10 @@ OpenRSA = false
 # postgres: host=%s port=%s user=%s dbname=%s password=%s sslmode=%s
 # postgres: DSN="host=127.0.0.1 port=5432 user=root dbname=n9e_v6 password=1234 sslmode=disable"
 # sqlite: DSN="/path/to/filename.db"
-DSN = "root:1234@tcp(127.0.0.1:3306)/n9e_v6?charset=utf8mb4&parseTime=True&loc=Local&allowNativePasswords=true"
+#DSN = "root:1qaz#EDC@tcp(39.107.78.98:6333)/n9e_v6?charset=utf8mb4&parseTime=True&loc=Local&allowNativePasswords=true"
+DSN = "root:1qaz#EDC@tcp(127.0.0.1:6333)/n9e_v6?charset=utf8mb4&parseTime=True&loc=Local&allowNativePasswords=true"
 # enable debug mode or not
-Debug = false
+Debug = true
 # mysql postgres sqlite
 DBType = "mysql"
 # unit: s
@@ -92,6 +93,7 @@ MaxIdleConns = 50
 
 [Redis]
 # address, ip:port or ip1:port,ip2:port for cluster and sentinel(SentinelAddrs)
+#Address = "39.107.78.98:6379"
 Address = "127.0.0.1:6379"
 # Username = ""
 # Password = ""
@@ -110,7 +112,7 @@ RedisType = "standalone"
 # auto detect if blank
 IP = ""
 # unit ms
-Interval = 1000
+Interval = 10000
 EngineName = "default"
 
 # [Alert.Alerting]
@@ -141,7 +143,8 @@ ForceUseServerTS = true
 
 [[Pushgw.Writers]] 
 # Url = "http://127.0.0.1:8480/insert/0/prometheus/api/v1/write"
-Url = "http://127.0.0.1:9090/api/v1/write"
+#Url = "http://127.0.0.1:9090/api/v1/write"
+Url = "http://127.0.0.1:8428/api/v1/write"
 # Basic auth username
 BasicAuthUser = ""
 # Basic auth password

@@ -1,6 +1,7 @@
 package router
 
 import (
+	"github.com/toolkits/pkg/logger"
 	"net/http"
 	"sort"
 	"strings"
@@ -136,6 +137,19 @@ func (rt *Router) alertCurEventsGetByRid(c *gin.Context) {
 	rid := ginx.QueryInt64(c, "rid")
 	dsId := ginx.QueryInt64(c, "dsid")
 	ginx.NewRender(c).Data(models.AlertCurEventGetByRuleIdAndDsId(rt.Ctx, rid, dsId))
+}
+
+func (rt *Router) getCurEventListByGroup(c *gin.Context) {
+	groupID := ginx.QueryInt(c, "group_id", 0)
+	list, err := models.AlertCurEventGetByGroupID(rt.Ctx, groupID)
+	if err != nil {
+		logger.Errorf("AlertCurEventGetByGroupID error: %v", err)
+		ginx.Dangerous(err)
+	}
+	ginx.NewRender(c).Data(gin.H{
+		"list":  list,
+		"total": len(list),
+	}, nil)
 }
 
 // 列表方式，拉取活跃告警

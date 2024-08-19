@@ -4,6 +4,8 @@ import (
 	"context"
 	"crypto/tls"
 	"fmt"
+	"github.com/ccfos/nightingale/v6/models"
+	"github.com/ccfos/nightingale/v6/pkg/ctx"
 	"net"
 	"net/http"
 	"net/http/httputil"
@@ -36,11 +38,11 @@ func (rt *Router) promBatchQueryRange(c *gin.Context) {
 	var f BatchQueryForm
 	ginx.Dangerous(c.BindJSON(&f))
 
-	lst, err := PromBatchQueryRange(rt.PromClients, f)
+	lst, err := PromBatchQueryRange(rt.PromClients, rt.Ctx, f)
 	ginx.NewRender(c).Data(lst, err)
 }
 
-func PromBatchQueryRange(pc *prom.PromClientMap, f BatchQueryForm) ([]model.Value, error) {
+func PromBatchQueryRange(pc *prom.PromClientMap, ctx *ctx.Context, f BatchQueryForm) ([]model.Value, error) {
 	var lst []model.Value
 
 	cli := pc.GetCli(f.DatasourceId)
@@ -49,6 +51,21 @@ func PromBatchQueryRange(pc *prom.PromClientMap, f BatchQueryForm) ([]model.Valu
 	}
 
 	for _, item := range f.Queries {
+		if item.Query == "system_cur_alert_total" { //获取当前活跃告警数量
+			count, err := models.AlertCurEventGetCount(ctx)
+			res := model.Matrix{
+				&model.SampleStream{
+					Metric: model.Metric{},
+					Values: []model.SamplePair{model.SamplePair{
+						Timestamp: 1,
+						Value:     model.SampleValue(count),
+					}},
+				},
+			}
+			lst = append(lst, res)
+			return lst, err
+		}
+
 		r := pkgprom.Range{
 			Start: time.Unix(item.Start, 0),
 			End:   time.Unix(item.End, 0),

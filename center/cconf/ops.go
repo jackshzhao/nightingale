@@ -73,7 +73,7 @@ ops:
   cname: 应用视图
   ops:
     - "/applications"
-    - "/application-details"
+    - "/dashboards/1"
 
 
 - name: dashboards

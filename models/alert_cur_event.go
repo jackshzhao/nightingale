@@ -16,6 +16,10 @@ import (
 	"github.com/toolkits/pkg/logger"
 )
 
+const EmergencyScore = 30
+const WarningScore = 10
+const NoticeScore = 5
+
 type AlertCurEvent struct {
 	Id                 int64             `json:"id" gorm:"primaryKey"`
 	Cate               string            `json:"cate"`
@@ -689,4 +693,23 @@ func AlertCurEventStatistics(ctx *ctx.Context, stime time.Time) map[string]inter
 	}
 
 	return res
+}
+
+func AlertCurEventGetByIdent(ctx *ctx.Context, ident string) ([]AlertCurEvent, error) {
+	var lst []AlertCurEvent
+	err := DB(ctx).Model(&AlertCurEvent{}).Where("target_ident = ?", ident).Order("trigger_time desc").Find(&lst).Error
+	return lst, err
+}
+
+func AlertCurEventGetByGroupID(ctx *ctx.Context, groupID int) ([]AlertCurEvent, error) {
+	var lst []AlertCurEvent
+	//err := DB(ctx).Model(&AlertCurEvent{}).Where("group_id = ?", groupID).Order("trigger_time desc").Find(&lst).Error
+	err := DB(ctx).Raw("select * from alert_cur_event where target_ident in (select ident from target where group_id = ?)", groupID).Scan(&lst).Error
+	return lst, err
+}
+
+func AlertCurEventGetCount(ctx *ctx.Context) (int64, error) {
+	session := DB(ctx).Model(&AlertCurEvent{})
+
+	return Count(session)
 }

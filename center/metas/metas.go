@@ -48,7 +48,7 @@ func (s *Set) Set(ident string, meta models.HostMeta) {
 
 func (s *Set) LoopPersist() {
 	for {
-		time.Sleep(time.Second)
+		time.Sleep(30 * time.Second)
 		s.persist()
 	}
 }

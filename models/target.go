@@ -13,6 +13,9 @@ import (
 	"gorm.io/gorm"
 )
 
+const OrdinaryNode = "普通节点"
+const KeyNode = "关键节点"
+
 type Target struct {
 	Id           int64             `json:"id" gorm:"primaryKey"`
 	GroupId      int64             `json:"group_id"`
@@ -26,7 +29,9 @@ type Target struct {
 	HostIp       string            `json:"host_ip"` //ipv4，do not needs range select
 	AgentVersion string            `json:"agent_version"`
 	EngineName   string            `json:"engine_name"`
-	HealthLevel  int               `json:"health_level"`
+	HealthLevel  float32           `json:"health_level"`
+	AlertNum     int               `json:"alert_num"`
+	Weight       string            `json:"weight"`
 
 	UnixTime   int64   `json:"unixtime" gorm:"-"`
 	Offset     int64   `json:"offset" gorm:"-"`
@@ -224,6 +229,13 @@ func TargetGetsAll(ctx *ctx.Context) ([]*Target, error) {
 func TargetUpdateNote(ctx *ctx.Context, idents []string, note string) error {
 	return DB(ctx).Model(&Target{}).Where("ident in ?", idents).Updates(map[string]interface{}{
 		"note":      note,
+		"update_at": time.Now().Unix(),
+	}).Error
+}
+
+func TargetUpdateWeight(ctx *ctx.Context, idents []string, weight string) error {
+	return DB(ctx).Model(&Target{}).Where("ident in ?", idents).Updates(map[string]interface{}{
+		"weight":    weight,
 		"update_at": time.Now().Unix(),
 	}).Error
 }
@@ -458,4 +470,24 @@ func IdentsFilter(ctx *ctx.Context, idents []string, where string, args ...inter
 
 func (m *Target) UpdateFieldsMap(ctx *ctx.Context, fields map[string]interface{}) error {
 	return DB(ctx).Model(m).Updates(fields).Error
+}
+
+func GetTargetsGroupIDAndWeight(ctx *ctx.Context, groupID int64, weight string) ([]*Target, error) {
+	var targets []*Target
+	err := DB(ctx).Where("group_id = ? and weight = ?", groupID, weight).Find(&targets).Error
+	return targets, err
+}
+
+func GetAllTargets(ctx *ctx.Context) ([]*Target, error) {
+	var lst []*Target
+	err := DB(ctx).Model(&Target{}).Find(&lst).Error
+
+	return lst, err
+}
+
+func TargetUpdateHealth(ctx *ctx.Context, id int64, alertNum int, healthLevel float32) error {
+	return DB(ctx).Model(&Target{}).Where("id = ?", id).Updates(map[string]interface{}{
+		"health_level": healthLevel,
+		"alert_num":    alertNum,
+	}).Error
 }

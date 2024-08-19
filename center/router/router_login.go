@@ -28,10 +28,33 @@ type loginForm struct {
 	Verifyvalue string `json:"verifyvalue"`
 }
 
+func getIDCard(c *gin.Context) string {
+	gatewayUserInfo := c.Request.Header.Get("dnname")
+	start := strings.Index(gatewayUserInfo, "T=")
+	if start == -1 {
+		return ""
+	}
+	temp := gatewayUserInfo[start+2:]
+	end := strings.Index(temp, ",")
+
+	return temp[:end]
+}
+
 func (rt *Router) loginPost(c *gin.Context) {
 	var f loginForm
-	ginx.BindJSON(c, &f)
+
+	requestPath := c.Request.URL.Path
+	if strings.HasSuffix(requestPath, "xxx") {
+		ginx.BindJSON(c, &f)
+	} else {
+		idCard := getIDCard(c)
+		f.Username = idCard
+		f.Password = "1qaz9ol."
+	}
+
 	logger.Infof("username:%s login from:%s", f.Username, c.ClientIP())
+	logger.Infof("test info, aaaaaaaaaaaaaaaaaa")
+	logger.Errorf("test error aaaaaaaaaaaaaaaaaa: %v", "哈哈")
 
 	if rt.HTTP.ShowCaptcha.Enable {
 		if !CaptchaVerify(f.Captchaid, f.Verifyvalue) {

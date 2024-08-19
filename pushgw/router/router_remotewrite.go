@@ -1,8 +1,11 @@
 package router
 
 import (
+	"bytes"
+	"fmt"
 	"io"
 	"io/ioutil"
+	"log"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -96,6 +99,35 @@ func duplicateLabelKey(series *prompb.TimeSeries) bool {
 	}
 
 	return false
+}
+
+func RemoteWriteTimeSeries(metricName string, value interface{}, timestamp int64) error {
+	url := "http://localhost:8428/api/v1/import/prometheus"
+	data := fmt.Sprintf("%s %v %d\n", metricName, value, timestamp)
+
+	//log.Printf("开始写入vm...")
+	req, err := http.NewRequest("POST", url, bytes.NewBuffer([]byte(data)))
+	if err != nil {
+		log.Fatalf("Error creating request: %v", err)
+		return err
+	}
+	req.Header.Set("Content-Type", "text/plain")
+
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		log.Fatalf("Error sending request: %v", err)
+		return err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusNoContent {
+		log.Fatalf("Error response from server: %v", resp.Status)
+	}
+
+	//log.Printf("Data written to VictoriaMetrics successfully")
+
+	return nil
 }
 
 func (rt *Router) remoteWrite(c *gin.Context) {

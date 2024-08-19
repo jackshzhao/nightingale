@@ -3,15 +3,16 @@ package center
 import (
 	"context"
 	"fmt"
+	"github.com/ccfos/nightingale/v6/center/integration"
 
 	"github.com/ccfos/nightingale/v6/alert"
 	"github.com/ccfos/nightingale/v6/alert/astats"
 	"github.com/ccfos/nightingale/v6/alert/process"
 	alertrt "github.com/ccfos/nightingale/v6/alert/router"
+	"github.com/ccfos/nightingale/v6/application"
 	"github.com/ccfos/nightingale/v6/center/cconf"
 	"github.com/ccfos/nightingale/v6/center/cconf/rsa"
 	"github.com/ccfos/nightingale/v6/center/cstats"
-	"github.com/ccfos/nightingale/v6/center/integration"
 	"github.com/ccfos/nightingale/v6/center/metas"
 	centerrt "github.com/ccfos/nightingale/v6/center/router"
 	"github.com/ccfos/nightingale/v6/center/sso"
@@ -25,7 +26,6 @@ import (
 	"github.com/ccfos/nightingale/v6/pkg/httpx"
 	"github.com/ccfos/nightingale/v6/pkg/i18nx"
 	"github.com/ccfos/nightingale/v6/pkg/logx"
-	"github.com/ccfos/nightingale/v6/pkg/version"
 	"github.com/ccfos/nightingale/v6/prom"
 	"github.com/ccfos/nightingale/v6/pushgw/idents"
 	pushgwrt "github.com/ccfos/nightingale/v6/pushgw/router"
@@ -104,7 +104,7 @@ func Initialize(configDir string, cryptoKey string) (func(), error) {
 
 	writers := writer.NewWriters(config.Pushgw)
 
-	go version.GetGithubVersion()
+	//go version.GetGithubVersion()
 
 	alertrtRouter := alertrt.New(config.HTTP, config.Alert, alertMuteCache, targetCache, busiGroupCache, alertStats, ctx, externalProcessors)
 	centerRouter := centerrt.New(config.HTTP, config.Center, config.Alert, config.Ibex, cconf.Operations, dsCache, notifyConfigCache, promClients, tdengineClients,
@@ -122,6 +122,7 @@ func Initialize(configDir string, cryptoKey string) (func(), error) {
 		migrate.MigrateIbexTables(db)
 		ibex.ServerStart(true, db, redis, config.HTTP.APIForService.BasicAuth, config.Alert.Heartbeat, &config.CenterApi, r, centerRouter, config.Ibex, config.HTTP.Port)
 	}
+	application.InitApplicationHealth(ctx)
 
 	httpClean := httpx.Init(config.HTTP, r)
 

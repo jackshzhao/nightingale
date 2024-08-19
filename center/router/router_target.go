@@ -531,3 +531,28 @@ func (rt *Router) targetsOfAlertRule(c *gin.Context) {
 
 	ginx.NewRender(c).Data(ret, err)
 }
+
+type targetWeightForm struct {
+	Idents []string `json:"idents"`
+	Weight string   `json:"weight"`
+}
+
+func (rt *Router) targetUpdateWeight(c *gin.Context) {
+	var f targetWeightForm
+	var err error
+	var failedResults = make(map[string]string)
+	ginx.BindJSON(c, &f)
+
+	if len(f.Idents) == 0 {
+		ginx.Bomb(http.StatusBadRequest, "idents must be provided")
+	}
+
+	failedResults, f.Idents, err = models.TargetsGetIdentsByIdentsAndHostIps(rt.Ctx, f.Idents, nil)
+	if err != nil {
+		ginx.Bomb(http.StatusBadRequest, err.Error())
+	}
+
+	rt.checkTargetPerm(c, f.Idents)
+
+	ginx.NewRender(c).Data(failedResults, models.TargetUpdateWeight(rt.Ctx, f.Idents, f.Weight))
+}

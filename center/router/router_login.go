@@ -53,8 +53,6 @@ func (rt *Router) loginPost(c *gin.Context) {
 	}
 
 	logger.Infof("username:%s login from:%s", f.Username, c.ClientIP())
-	logger.Infof("test info, aaaaaaaaaaaaaaaaaa")
-	logger.Errorf("test error aaaaaaaaaaaaaaaaaa: %v", "哈哈")
 
 	if rt.HTTP.ShowCaptcha.Enable {
 		if !CaptchaVerify(f.Captchaid, f.Verifyvalue) {

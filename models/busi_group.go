@@ -12,18 +12,19 @@ import (
 )
 
 type BusiGroup struct {
-	Id          int64   `json:"id" gorm:"primaryKey"`
-	Name        string  `json:"name"`
-	LabelEnable int     `json:"label_enable"`
-	LabelValue  string  `json:"label_value"`
-	CreateAt    int64   `json:"create_at"`
-	CreateBy    string  `json:"create_by"`
-	UpdateAt    int64   `json:"update_at"`
-	UpdateBy    string  `json:"update_by"`
-	HealthLevel float32 `json:"health_level"`
-	AlertNum    int     `json:"alert_num"`
-	Usability   float32 `json:"usability"`
-	Grade       int     `json:"grade"`
+	Id            int64   `json:"id" gorm:"primaryKey"`
+	Name          string  `json:"name"`
+	LabelEnable   int     `json:"label_enable"`
+	LabelValue    string  `json:"label_value"`
+	CreateAt      int64   `json:"create_at"`
+	CreateBy      string  `json:"create_by"`
+	UpdateAt      int64   `json:"update_at"`
+	UpdateBy      string  `json:"update_by"`
+	HealthLevel   float32 `json:"health_level"`
+	AlertNum      int     `json:"alert_num"`
+	Usability     float32 `json:"usability"`
+	Grade         int     `json:"grade"`
+	AdServiceName string  `json:"ad_service_name"`
 
 	UserGroups []UserGroupWithPermFlag `json:"user_groups" gorm:"-"`
 	DB         *gorm.DB                `json:"-" gorm:"-"`

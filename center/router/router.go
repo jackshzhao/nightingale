@@ -181,6 +181,9 @@ func (rt *Router) Config(r *gin.Engine) {
 			pages.POST("/tdengine-tables", rt.tdengineTables)
 			pages.POST("/tdengine-columns", rt.tdengineColumns)
 
+			pages.GET("/query-app-http", rt.promQueryHttp)
+			pages.GET("/apps-connection", rt.getAllAppsConnection)
+
 		} else {
 			pages.Any("/proxy/:id/*url", rt.auth(), rt.dsProxy)
 			pages.POST("/query-range-batch", rt.auth(), rt.promBatchQueryRange)
@@ -553,6 +556,11 @@ func (rt *Router) Config(r *gin.Engine) {
 			service.GET("/user-variable/decrypt", rt.userVariableGetDecryptByService)
 
 			service.GET("/targets-of-alert-rule", rt.targetsOfAlertRule)
+
+			//新增的接口
+			service.GET("/application/series/month", rt.applicationSeriesMonth)
+			service.GET("/application/connect/month", rt.getAppConnection)
+			service.GET("/application/nodes/metrics", rt.getAppNodesMetrics)
 
 		}
 	}

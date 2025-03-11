@@ -477,6 +477,11 @@ func GetTargetsGroupIDAndWeight(ctx *ctx.Context, groupID int64, weight string) 
 	err := DB(ctx).Where("group_id = ? and weight = ?", groupID, weight).Find(&targets).Error
 	return targets, err
 }
+func GetTargetsGroupIDAndType(ctx *ctx.Context, groupID int64, nodeType string) ([]*Target, error) {
+	var targets []*Target
+	err := DB(ctx).Where("group_id = ? and tags like ?", groupID, "%"+nodeType+"%").Find(&targets).Error
+	return targets, err
+}
 
 func GetAllTargets(ctx *ctx.Context) ([]*Target, error) {
 	var lst []*Target
@@ -490,4 +495,10 @@ func TargetUpdateHealth(ctx *ctx.Context, id int64, alertNum int, healthLevel fl
 		"health_level": healthLevel,
 		"alert_num":    alertNum,
 	}).Error
+}
+
+func GetTargetsGroupID(ctx *ctx.Context, groupID int64) ([]*Target, error) {
+	var targets []*Target
+	err := DB(ctx).Where("group_id = ?", groupID).Find(&targets).Error
+	return targets, err
 }

@@ -52,7 +52,7 @@ Enable = true
 [HTTP.APIForService]
 Enable = true 
 [HTTP.APIForService.BasicAuth]
-user001 = "ccc26da7b9aba533cbb263a36c07dcc5"
+user001 = "88c0ecd700f136e3"
 
 [HTTP.JWTAuth]
 # unit: min

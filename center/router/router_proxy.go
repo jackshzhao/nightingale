@@ -4,16 +4,18 @@ import (
 	"context"
 	"crypto/tls"
 	"fmt"
-	"github.com/ccfos/nightingale/v6/models"
-	"github.com/ccfos/nightingale/v6/pkg/ctx"
+
 	"net"
 	"net/http"
 	"net/http/httputil"
 	"net/url"
+	"regexp"
 	"strings"
 	"sync"
 	"time"
 
+	"github.com/ccfos/nightingale/v6/models"
+	"github.com/ccfos/nightingale/v6/pkg/ctx"
 	pkgprom "github.com/ccfos/nightingale/v6/pkg/prom"
 	"github.com/ccfos/nightingale/v6/prom"
 	"github.com/gin-gonic/gin"
@@ -90,6 +92,101 @@ type BatchInstantForm struct {
 type InstantFormItem struct {
 	Time  int64  `json:"time" binding:"required"`
 	Query string `json:"query" binding:"required"`
+}
+
+type MetricSimRes struct {
+	MS    MetricSimple `json:"metric"`
+	Value []int        `json:"value"`
+}
+
+type MetricSimple struct {
+	Name    string `json:"__name__"`
+	Ident   string `json:"ident"`
+	Method  string `json:"method"`
+	Product string `json:"product"`
+	Target  string `json:"target"`
+}
+
+type AppHttpRes struct {
+	Dat []AppHttpInfo `json:"dat"`
+	Err string        `json:"err"`
+}
+
+type AppHttpInfo struct {
+	Target       string  `json:"target"`
+	ResultCode   float64 `json:"result_code"`
+	ResponseCode float64 `json:"response_code"`
+	ResponseTime float64 `json:"response_time"`
+}
+
+func (rt *Router) promQueryHttp(c *gin.Context) {
+	appName := c.Query("app_name")
+	//var f BatchInstantForm
+	time := time.Now().Unix()
+	resultCodeQuery := fmt.Sprintf("http_response_result_code{product='%s'}", appName)
+	responseCodeQuery := fmt.Sprintf("http_response_response_code{product='%s'}", appName)
+	responseTimeQuery := fmt.Sprintf("http_response_response_time{product='%s'}", appName)
+	queries := []InstantFormItem{
+		{
+			Time:  time,
+			Query: resultCodeQuery,
+		},
+		{
+			Time:  time,
+			Query: responseCodeQuery,
+		},
+		{
+			Time:  time,
+			Query: responseTimeQuery,
+		},
+	}
+	f := BatchInstantForm{
+		DatasourceId: 1,
+		Queries:      queries,
+	}
+
+	metricArr := make([]AppHttpInfo, 0)
+	appHttpInfo := AppHttpInfo{}
+
+	lst, err := PromBatchQueryInstant(rt.PromClients, f)
+	for _, vector := range lst {
+		vectorResult, ok := vector.(model.Vector)
+		if !ok {
+			logger.Errorf("Result is not a Vector type")
+		}
+		if len(vectorResult) > 0 {
+			metric := vectorResult[0].Metric.String()
+
+			appHttpInfo.Target = FindTarget(metric)
+			if strings.Contains(metric, "http_response_result_code") {
+				appHttpInfo.ResultCode = float64(vectorResult[0].Value)
+			}
+			if strings.Contains(metric, "http_response_response_code") {
+				appHttpInfo.ResponseCode = float64(vectorResult[0].Value)
+			}
+			if strings.Contains(metric, "http_response_response_time") {
+				appHttpInfo.ResponseTime = float64(vectorResult[0].Value) * 1000
+			}
+		}
+	}
+	if appHttpInfo.Target != "" {
+		metricArr = append(metricArr, appHttpInfo)
+	}
+
+	ginx.NewRender(c).Data(metricArr, err)
+}
+
+func FindTarget(str string) string {
+	re := regexp.MustCompile(`target="([^"]+)"`)
+
+	// 使用正则表达式查找匹配项
+	match := re.FindStringSubmatch(str)
+	if len(match) > 1 {
+		target := match[1]
+		return target
+	}
+	logger.Errorf("Target value not found, str = %s", str)
+	return ""
 }
 
 func (rt *Router) promBatchQueryInstant(c *gin.Context) {

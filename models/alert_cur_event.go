@@ -73,6 +73,11 @@ type AlertCurEvent struct {
 	ExtraInfo          []string          `json:"extra_info" gorm:"-"`
 }
 
+type AlertCurEventCountByGroup struct {
+	GroupId int64 `json:"group_id"`
+	Count   int   `json:"count"`
+}
+
 func (e *AlertCurEvent) TableName() string {
 	return "alert_cur_event"
 }
@@ -712,4 +717,11 @@ func AlertCurEventGetCount(ctx *ctx.Context) (int64, error) {
 	session := DB(ctx).Model(&AlertCurEvent{})
 
 	return Count(session)
+}
+
+func AlertCurEventCountGroupByGroupID(ctx *ctx.Context) ([]AlertCurEventCountByGroup, error) {
+	var lst []AlertCurEventCountByGroup
+	//err := DB(ctx).Model(&AlertCurEvent{}).Where("group_id = ?", groupID).Order("trigger_time desc").Find(&lst).Error
+	err := DB(ctx).Raw("SELECT group_id, count(*) as count FROM `alert_cur_event` group by group_id").Scan(&lst).Error
+	return lst, err
 }

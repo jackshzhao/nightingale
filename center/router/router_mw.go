@@ -258,6 +258,11 @@ func (rt *Router) perm(operation string) gin.HandlerFunc {
 		can, err := me.CheckPerm(rt.Ctx, operation)
 		ginx.Dangerous(err)
 
+		if !can && operation == "/dashboards" {
+			can, err = me.CheckPerm(rt.Ctx, "/dashboards/1")
+			ginx.Dangerous(err)
+		}
+
 		if !can {
 			ginx.Bomb(http.StatusForbidden, "forbidden")
 		}

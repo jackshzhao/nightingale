@@ -145,6 +145,12 @@ func TargetTotal(ctx *ctx.Context, options ...BuildTargetWhereOption) (int64, er
 	return Count(buildTargetWhere(ctx, options...))
 }
 
+func TargetTotalCount(ctx *ctx.Context) (int64, error) {
+	var cnt int64
+	err := DB(ctx).Model(&Target{}).Count(&cnt).Error
+	return cnt, err
+}
+
 func TargetGets(ctx *ctx.Context, limit, offset int, order string, desc bool, options ...BuildTargetWhereOption) ([]*Target, error) {
 	var lst []*Target
 	if desc {
@@ -501,4 +507,10 @@ func GetTargetsGroupID(ctx *ctx.Context, groupID int64) ([]*Target, error) {
 	var targets []*Target
 	err := DB(ctx).Where("group_id = ?", groupID).Find(&targets).Error
 	return targets, err
+}
+
+func GetTargetByID(ctx *ctx.Context, id int) (*Target, error) {
+	var target *Target
+	err := DB(ctx).Where("id = ?", id).First(&target).Error
+	return target, err
 }

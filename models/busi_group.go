@@ -30,6 +30,12 @@ type BusiGroup struct {
 	DB         *gorm.DB                `json:"-" gorm:"-"`
 }
 
+type BusiGroupSimple struct {
+	ID          int64   `gorm:"column:id;primaryKey" json:"id"`
+	Name        string  `gorm:"column:name" json:"name"`
+	HealthLevel float32 `gorm:"column:health_level" json:"health_level"`
+}
+
 func New(db *gorm.DB) *BusiGroup {
 	return &BusiGroup{
 		DB: db,
@@ -90,6 +96,18 @@ func BusiGroupGetMap(ctx *ctx.Context) (map[int64]*BusiGroup, error) {
 	}
 
 	return ret, nil
+}
+
+func BusiGroupSimpleGetAll(ctx *ctx.Context) ([]*BusiGroupSimple, error) {
+	var lst []*BusiGroupSimple
+	err := DB(ctx).Table("busi_group").Select("id, name, health_level").Find(&lst).Error
+	return lst, err
+}
+
+func BusiGroupSimpleCount(ctx *ctx.Context) (int64, error) {
+	var count int64
+	err := DB(ctx).Model(&BusiGroup{}).Count(&count).Error
+	return count, err
 }
 
 func BusiGroupGetAll(ctx *ctx.Context) ([]*BusiGroup, error) {

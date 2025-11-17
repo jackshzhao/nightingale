@@ -464,6 +464,9 @@ func (rt *Router) Config(r *gin.Engine) {
 		pages.GET("/builtin-payload/:id", rt.auth(), rt.user(), rt.perm("/built-in-components"), rt.builtinPayloadGet)
 		pages.PUT("/builtin-payloads", rt.auth(), rt.user(), rt.perm("/built-in-components/put"), rt.builtinPayloadsPut)
 		pages.DELETE("/builtin-payloads", rt.auth(), rt.user(), rt.perm("/built-in-components/del"), rt.builtinPayloadsDel)
+
+		pages.POST("/application/topology", rt.saveAppTopology)
+		pages.GET("/application/topology", rt.getAppTopology)
 	}
 
 	r.GET("/api/n9e/versions", func(c *gin.Context) {
@@ -561,6 +564,8 @@ func (rt *Router) Config(r *gin.Engine) {
 			service.GET("/application/series/month", rt.applicationSeriesMonth)
 			service.GET("/application/connect/month", rt.getAppConnection)
 			service.GET("/application/nodes/metrics", rt.getAppNodesMetrics)
+			service.GET("/application/health/list", rt.getAppHealthList)
+			service.GET("/application/monitor/count", rt.getAppAndDeviceCount)
 
 		}
 	}

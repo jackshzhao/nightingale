@@ -75,6 +75,12 @@ ops:
     - "/applications"
     - "/dashboards/1"
 
+ops:
+- name: topology
+  cname: 应用拓扑管理
+  ops:
+    - "/application-topology"
+
 
 - name: dashboards
   cname: 仪表盘

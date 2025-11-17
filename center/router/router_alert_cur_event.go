@@ -157,7 +157,7 @@ func (rt *Router) alertCurEventsList(c *gin.Context) {
 	stime, etime := getTimeRange(c)
 	severity := ginx.QueryInt(c, "severity", -1)
 	query := ginx.QueryStr(c, "query", "")
-	limit := ginx.QueryInt(c, "limit", 20)
+	limit := ginx.QueryInt(c, "limit", 100)
 	dsIds := queryDatasourceIds(c)
 
 	prod := ginx.QueryStr(c, "prods", "")

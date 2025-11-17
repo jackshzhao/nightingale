@@ -115,6 +115,17 @@ IP = ""
 Interval = 10000
 EngineName = "default"
 
+[Alert.Syslog]
+Enable = false
+Listen = ":514"
+
+[Alert.PM]
+Enable = true
+# unit: seconds
+Interval = 30
+#IPs = ["192.168.9.164", "192.168.9.165"]
+IPs = ["101.42.0.80", "192.168.9.164"]
+
 # [Alert.Alerting]
 # NotifyConcurrency = 10
 

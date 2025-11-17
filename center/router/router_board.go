@@ -15,6 +15,7 @@ import (
 
 type boardForm struct {
 	Name       string  `json:"name"`
+	AliasName  string  `json:"alias_name"`
 	Ident      string  `json:"ident"`
 	Tags       string  `json:"tags"`
 	Configs    string  `json:"configs"`
@@ -165,12 +166,13 @@ func (rt *Router) boardPut(c *gin.Context) {
 	}
 
 	bo.Name = f.Name
+	bo.AliasName = f.AliasName
 	bo.Ident = f.Ident
 	bo.Tags = f.Tags
 	bo.UpdateBy = me.Username
 	bo.UpdateAt = time.Now().Unix()
 
-	err = bo.Update(rt.Ctx, "name", "ident", "tags", "update_by", "update_at")
+	err = bo.Update(rt.Ctx, "name", "alias_name", "ident", "tags", "update_by", "update_at")
 	ginx.NewRender(c).Data(bo, err)
 }
 

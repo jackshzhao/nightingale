@@ -279,6 +279,13 @@ func EventPersist(ctx *ctx.Context, event *AlertCurEvent) error {
 		return fmt.Errorf("event_persist_check_exists_fail: %v rule_id=%d hash=%s", err, event.RuleId, event.Hash)
 	}
 
+	// 保留首次触发时间（仅限 syslog 直推，RuleId==0）赵仕豪20251104添加
+	if has && event.RuleId == 0 {
+		if old, _ := AlertCurEventGet(ctx, "hash=?", event.Hash); old != nil && old.FirstTriggerTime > 0 {
+			event.FirstTriggerTime = old.FirstTriggerTime
+		}
+	}
+
 	his := event.ToHis(ctx)
 
 	// 不管是告警还是恢复，全量告警里都要记录

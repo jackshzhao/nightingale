@@ -36,12 +36,10 @@ func extractIdentFromTimeSeries(s *prompb.TimeSeries, ignoreIdent, ignoreHost bo
 	}
 
 	var ident string
-
 	// 如果标签中有ident，则直接使用
 	if idx, ok := labelMap["ident"]; ok {
 		ident = s.Labels[idx].Value
 	}
-
 	if ident == "" {
 		// 没有 ident 标签，尝试使用 agent_hostname 作为 ident
 		// agent_hostname for grafana-agent and categraf
@@ -50,7 +48,6 @@ func extractIdentFromTimeSeries(s *prompb.TimeSeries, ignoreIdent, ignoreHost bo
 			ident = s.Labels[idx].Value
 		}
 	}
-
 	if !ignoreHost && ident == "" {
 		// agent_hostname 没有，那就使用 host 作为 ident，用于 telegraf 的场景
 		// 但是，有的时候 nginx 采集的指标中带有 host 标签表示域名，这个时候就不能用 host 作为 ident，此时需要在 url 中设置 ignore_host=true

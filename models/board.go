@@ -22,6 +22,7 @@ type Board struct {
 	Id         int64   `json:"id" gorm:"primaryKey"`
 	GroupId    int64   `json:"group_id"`
 	Name       string  `json:"name"`
+	AliasName  string  `json:"alias_name"`
 	Ident      string  `json:"ident"`
 	Tags       string  `json:"tags"`
 	CreateAt   int64   `json:"create_at"`

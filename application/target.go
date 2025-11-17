@@ -45,5 +45,9 @@ func computeTargetHealth(ctx *ctx.Context, targetIdent string) (float32, int, er
 		}
 	}
 
+	if score < 0 {
+		score = 0
+	}
+
 	return score, len(alerts), nil
 }

@@ -166,7 +166,7 @@ func sendHttp(method, url string) ([]byte, error) {
 	}
 
 	// 设置Basic Auth
-	req.SetBasicAuth("itil_monitor", "1qaz2wsx#EDC")
+	req.SetBasicAuth("itil_monitor", "7ujm8ik,(OL>")
 
 	// 发送请求
 	resp, err := client.Do(req)

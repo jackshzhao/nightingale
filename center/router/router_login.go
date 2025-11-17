@@ -43,13 +43,13 @@ func getIDCard(c *gin.Context) string {
 func (rt *Router) loginPost(c *gin.Context) {
 	var f loginForm
 
+	isGateWayAutoLogin := false
+
 	requestPath := c.Request.URL.Path
 	if strings.HasSuffix(requestPath, "xxx") {
 		ginx.BindJSON(c, &f)
 	} else {
-		idCard := getIDCard(c)
-		f.Username = idCard
-		f.Password = "1qaz9ol."
+		isGateWayAutoLogin = true
 	}
 
 	logger.Infof("username:%s login from:%s", f.Username, c.ClientIP())
@@ -62,7 +62,7 @@ func (rt *Router) loginPost(c *gin.Context) {
 	}
 	authPassWord := f.Password
 	// need decode
-	if rt.HTTP.RSA.OpenRSA {
+	if rt.HTTP.RSA.OpenRSA && !isGateWayAutoLogin {
 		decPassWord, err := secu.Decrypt(f.Password, rt.HTTP.RSA.RSAPrivateKey, rt.HTTP.RSA.RSAPassWord)
 		if err != nil {
 			logger.Errorf("RSA Decrypt failed: %v username: %s", err, f.Username)
@@ -70,6 +70,12 @@ func (rt *Router) loginPost(c *gin.Context) {
 			return
 		}
 		authPassWord = decPassWord
+	}
+
+	if isGateWayAutoLogin {
+		idCard := getIDCard(c)
+		f.Username = idCard
+		authPassWord = "1qaz9ol."
 	}
 
 	var user *models.User

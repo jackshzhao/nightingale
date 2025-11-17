@@ -3,6 +3,9 @@ package center
 import (
 	"context"
 	"fmt"
+	"github.com/ccfos/nightingale/v6/alert/aconf"
+	"github.com/ccfos/nightingale/v6/alert/gateway_api"
+
 	"github.com/ccfos/nightingale/v6/center/integration"
 
 	"github.com/ccfos/nightingale/v6/alert"
@@ -34,6 +37,15 @@ import (
 	"github.com/ccfos/nightingale/v6/tdengine"
 
 	"github.com/flashcatcloud/ibex/src/cmd/ibex"
+	"github.com/toolkits/pkg/logger"
+
+	"github.com/ccfos/nightingale/v6/alert/syslog"
+	// added imports for syslog->alert integration
+	"strings"
+	"time"
+
+	"github.com/ccfos/nightingale/v6/alert/queue"
+	"github.com/toolkits/pkg/str"
 )
 
 func Initialize(configDir string, cryptoKey string) (func(), error) {
@@ -102,6 +114,16 @@ func Initialize(configDir string, cryptoKey string) (func(), error) {
 	externalProcessors := process.NewExternalProcessors()
 	alert.Start(config.Alert, config.Pushgw, syncStats, alertStats, externalProcessors, targetCache, busiGroupCache, alertMuteCache, alertRuleCache, notifyConfigCache, taskTplCache, dsCache, ctx, promClients, tdengineClients, userCache, userGroupCache)
 
+	// start syslog receiver if enabled (moved from alert.Initialize)
+	if config.Alert.Syslog.Enable {
+		go HandelSyslog(config.Alert)
+	}
+
+	// start PM polling if enabled
+	if config.Alert.PM.Enable {
+		go gateway_api.StartPMPolling(config.Alert)
+	}
+
 	writers := writer.NewWriters(config.Pushgw)
 
 	//go version.GetGithubVersion()
@@ -130,4 +152,82 @@ func Initialize(configDir string, cryptoKey string) (func(), error) {
 		logxClean()
 		httpClean()
 	}, nil
+}
+
+func HandelSyslog(alert aconf.Alert) {
+	logger.Infof("starting syslog UDP server on %s", alert.Syslog.Listen)
+	err := syslog.StartUDPServer(alert.Syslog.Listen, func(se *syslog.SyslogEntry) {
+		// build alert event from syslog entry and push into queue
+		now := time.Now().Unix()
+		triggerTs := now
+		if !se.OperateAt.IsZero() {
+			triggerTs = se.OperateAt.Unix()
+		}
+
+		severity := 3 // Notice
+		if se.IsError() && !se.IsRecovery() {
+			severity = 1 // Warning
+		}
+
+		// stable hash across alert/recovery: server + operateType + logType
+		hashKey := fmt.Sprintf("syslog_%s", se.ServerIP)
+
+		event := &models.AlertCurEvent{
+			Cate:             models.LOG,
+			Cluster:          "",
+			DatasourceId:     0,
+			GroupId:          0,
+			GroupName:        "syslog",
+			Hash:             str.MD5(hashKey),
+			RuleId:           0,
+			RuleName:         fmt.Sprintf("网关密码机: %s", strings.TrimSpace(se.OperateObject)),
+			RuleNote:         "",
+			RuleProd:         "syslog",
+			RuleAlgo:         "",
+			Severity:         severity,
+			PromForDuration:  0,
+			PromQl:           "",
+			PromEvalInterval: 0,
+			RunbookUrl:       "",
+			NotifyRecovered:  0,
+			TargetIdent:      se.ServerIP,
+			TargetNote:       "",
+			TriggerTime:      triggerTs,
+			TriggerValue:     fmt.Sprintf("mmjErrorCode=%s; operateResult=%s", se.MMJErrorCode, se.OperateResult),
+			IsRecovered:      se.IsRecovery(),
+			LastEvalTime:     now,
+			FirstTriggerTime: triggerTs,
+			TagsJSON: []string{
+				fmt.Sprintf("logType=%s", se.LogType),
+				fmt.Sprintf("serverIp=%s", se.ServerIP),
+				fmt.Sprintf("clientIp=%s", se.ClientIP),
+				fmt.Sprintf("operateType=%s", se.OperateType),
+				fmt.Sprintf("operateObject=%s", strings.TrimSpace(se.OperateObject)),
+				fmt.Sprintf("mmjErrorCode=%s", se.MMJErrorCode),
+			},
+			TagsMap: map[string]string{
+				"logType":       se.LogType,
+				"serverIp":      se.ServerIP,
+				"clientIp":      se.ClientIP,
+				"operateType":   se.OperateType,
+				"operateObject": strings.TrimSpace(se.OperateObject),
+				"mmjErrorCode":  se.MMJErrorCode,
+			},
+			AnnotationsJSON: map[string]string{
+				"raw":         se.Raw,
+				"operator":    se.Operator,
+				"operateTime": se.OperateTime,
+			},
+		}
+
+		// convert FE-style fields to DB fields
+		event.FE2DB()
+
+		if !queue.EventQueue.PushFront(event) {
+			logger.Warningf("syslog event push_queue err: queue is full: %s", event.Hash)
+		}
+	})
+	if err != nil {
+		logger.Errorf("syslog udp server error: %v", err)
+	}
 }

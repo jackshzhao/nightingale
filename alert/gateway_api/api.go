@@ -24,8 +24,8 @@ var pmHasActiveError = map[string]bool{}
 // Resp: {"code":0,"message":"PM认证成功"}
 // code==0 正常，不入队；否则异常，告警内容为 message
 func HandelPM(serverIP string) {
-	//url := fmt.Sprintf("https://%s:443/SendMaintenancePlatform", serverIP)
-	url := fmt.Sprintf("http://%s:17000/v1/monitor/test2", serverIP)
+	url := fmt.Sprintf("https://%s:443/SendMaintenancePlatform", serverIP)
+	//url := fmt.Sprintf("http://%s:17000/v1/monitor/test2", serverIP)
 	body := strings.NewReader(`{"certificationMark":"pmRequestgw"}`)
 
 	client := &http.Client{
@@ -93,6 +93,11 @@ func pushPM(serverIP string, code int, message string, recovered bool) {
 		severity = 3
 	}
 
+	ruleName := fmt.Sprintf("网关异常: %s", message)
+	if recovered {
+		ruleName = fmt.Sprintf("网关恢复: %s", message)
+	}
+
 	event := &models.AlertCurEvent{
 		Cate:             models.LOG,
 		Cluster:          "",
@@ -101,7 +106,7 @@ func pushPM(serverIP string, code int, message string, recovered bool) {
 		GroupName:        "syslog",
 		Hash:             str.MD5(hashKey),
 		RuleId:           0,
-		RuleName:         fmt.Sprintf("网关异常: %s", message),
+		RuleName:         ruleName,
 		RuleNote:         "",
 		RuleProd:         "syslog",
 		RuleAlgo:         "",
